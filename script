@@ -1,0 +1,61 @@
+#!/bin/bash
+
+##########################
+### OS compatibility #####
+##########################
+
+# Set the full path environment variable to include the exec.sh script
+_PATH=$(pwd)
+
+# Function to add alias in shell config file for macOS and Linux
+add_alias_bash() {
+  local gmd_alias="gmap"
+  local gmd_command="$_PATH/exec.sh"
+  local shell_rc_file
+
+  # Check if it's macOS
+  if [[ "$(uname)" == "Darwin" ]]; then
+    #shell_rc_file="$HOME/.bash_profile"
+    #shell_rc_file="$HOME/.zshrc"
+    shell_rc_file=~/.zshrc
+  else
+    shell_rc_file=~/.bashrc
+  fi
+
+  # Check if the alias already exists in the shell config file
+  if ! grep -q "alias $gmd_alias=" shell_rc_file; then
+    echo "alias $gmd_alias=\"$gmd_command\"" >> shell_rc_file
+    source shell_rc_file > /dev/null 2>&1
+    echo "Alias created: $gmd_alias"
+  else
+    echo "Alias already exists: $gmd_alias"
+  fi
+}
+
+# Function to add alias in PowerShell profile for Windows
+add_alias_powershell() {
+  local gmd_alias="gmd"
+  local gmd_command="$_PATH/exec.sh"
+  local powershell_profile="$PROFILE"
+
+  # Check if the alias already exists in the PowerShell profile
+  if [[ -f "$powershell_profile" && ! "$(Get-Content $powershell_profile)" =~ alias\ $gmd_alias= ]]; then
+    echo "alias $gmd_alias=\"$gmd_command\"" >> "$powershell_profile"
+    Write-Output "Alias created: $gmd_alias"
+  else
+    Write-Output "Alias already exists: $gmd_alias"
+  fi
+}
+
+# Check the operating system and add alias accordingly
+case "$(uname)" in
+  "Darwin")
+    add_alias_bash
+    ;;
+  "Linux")
+    add_alias_bash
+    ;;
+  *)
+    add_alias_powershell
+    ;;
+esac
